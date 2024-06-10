@@ -18,3 +18,5 @@ class DisplayTable(Base):
         return f"Password(id={self.id}, username='{self.username}', password='{self.password}')"
 
 if __name__ == '__main__':
+
+    engine = create_engine('sqlite:///passwords.db')
