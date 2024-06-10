@@ -6,3 +6,5 @@ from texttable import Texttable
 Base = declarative_base()
 
 class DisplayTable(Base):
+
+    __tablename__ = 'passwords'
