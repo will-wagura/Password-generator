@@ -8,3 +8,7 @@ Base = declarative_base()
 class DisplayTable(Base):
 
     __tablename__ = 'passwords'
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String)
+    password = Column(String)
