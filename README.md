@@ -1,4 +1,3 @@
-## Stephy kamau
-
 # Authors
 - Joseph
+- Stephy
