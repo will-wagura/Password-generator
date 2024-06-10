@@ -24,3 +24,4 @@ if __name__ == '__main__':
     Session = sessionmaker(bind=engine)
     session = Session()
     data = session.query(DisplayTable).all()
+    textTable = Texttable()
