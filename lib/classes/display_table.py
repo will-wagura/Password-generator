@@ -14,5 +14,7 @@ class DisplayTable(Base):
     password = Column(String)
 
 
-def __repr__(self):
+    def __repr__(self):
         return f"Password(id={self.id}, username='{self.username}', password='{self.password}')"
+
+if __name__ == '__main__':
