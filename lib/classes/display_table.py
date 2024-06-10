@@ -20,3 +20,4 @@ class DisplayTable(Base):
 if __name__ == '__main__':
 
     engine = create_engine('sqlite:///passwords.db')
+    Base.metadata.create_all(engine)
