@@ -25,3 +25,6 @@ if __name__ == '__main__':
     session = Session()
     data = session.query(DisplayTable).all()
     textTable = Texttable()
+    textTable.header(['Username', 'Password'])
+    for datum in data:
+        textTable.add_row([datum.username, datum.password])
