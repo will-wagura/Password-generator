@@ -1,9 +1,9 @@
 # lib/cli.py
 
-from sqlalchemy import Column, String
+from sqlalchemy import Column, String, Integer, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, relationship, Session
 
 Base = declarative_base()
 
@@ -18,10 +18,10 @@ class Password(Base):
     website = Column(String)
     username = Column(String)
     password = Column(String)
-    user_id = Column(Integer, ForeignKey('users.username'))
+    user_id = Column(String, ForeignKey('users.username'))
     user = relationship("User", backref="passwords")
 
-if __name__ == '__cli__':
+if __name__ == '__main__':
     engine = create_engine('sqlite:///passwords.db')
     Base.metadata.create_all(engine)
     session = sessionmaker(bind=engine)
@@ -51,17 +51,18 @@ if __name__ == '__cli__':
 
         if password != confirm_password:
             print("Passwords do not match!. Please try again.")
-
-        user = session.query(User).filter_by(username=username).first()
-        if user:
-            print('Username already exists. Please choose a different username.')
             sign_Up()
         else:
-            new_user = User(username=username, password=password)
-            session.add(new_user)
-            session.commit()
-            print('Account created successfully. Login to continue')
-            start_screen()
+            user = session.query(User).filter_by(username=username).first()
+            if user:
+                print('Username already exists. Please choose a different username.')
+                sign_Up()
+            else:
+                new_user = User(username=username, password=password)
+                session.add(new_user)
+                session.commit()
+                print('Account created successfully. Login to continue')
+                start_screen()
 
     def login():
         print('Please enter your username:')
@@ -72,7 +73,8 @@ if __name__ == '__cli__':
         user = session.query(User).filter_by(username=username, password=password).first()
         if user:
             print("Login successful!")
-            menu()
+            current_user = user
+            menu(current_user)
         else:
             print("Invalid username or password. Please try again.")
             print("If you forgot your password, type 'Reset' to reset your password")
@@ -97,7 +99,7 @@ if __name__ == '__cli__':
             print("Passwords do not match. Please try again.")
             reset_Password(username)
 
-    def menu():
+    def menu(current_user):
         print("Welcome to Encrypto. What would you like to do?:")
         print("0. Help.")
         print("1. Create a new password.")
@@ -109,15 +111,16 @@ if __name__ == '__cli__':
         if action == "0":
             help_Section()
         elif action == "1":
-            create_Password()
+            create_Password(current_user)
         elif action == "2":
-            manage_Passwords()
+            manage_Passwords(current_user)
         elif action == "3":
             start_screen()
         elif action == "4":
             quit()
         else:
             print("Invalid option. Please try again.")
+            menu(current_user)
     
     def help_Section():
         print("Welcome to the Help Section!")
@@ -152,14 +155,14 @@ if __name__ == '__cli__':
         input()
         menu()
 
-    def create_Password():
+    def create_Password(current_user):
         print("Welcome to the Create Password Section!")
         print("Please enter the following details to create a new password:")
         website = input("Website/Application Name: ")
         username = input("Username: ")
         password = input("Password: ")
 
-        password_obj = Password(website=website, username=username, password=password, user_username=session.query(User).first().username)
+        password_obj = Password(website=website, username=username, password=password, user_id=current_user.username)
         session.add(password_obj)
         session.commit()
         print("Password stored successfully!")
@@ -191,19 +194,19 @@ if __name__ == '__cli__':
             print("Invalid option. Please try again.")
             manage_Passwords()
 
-    def view_passwords():
+    def view_passwords(current_user):
         print("Here are your stored passwords:")
-        passwords = session.query(Password).filter_by(user_username=session.query(User).first().username).all()
+        passwords = session.query(Password).filter_by(user_id=current_user.username).all()
         for password in passwords:
             print(f"Website: {password.website}, Username: {password.username}, Password: {password.password}")
         print("Press Enter to go back to the menu when you are done :D")
         input()
-        manage_Passwords()
+        manage_Passwords(current_user)
     
-    def edit_password():
+    def edit_password(current_user):
         print("Edit Password Section!")
         website = input("Enter the website of the password you want to edit: ")
-        password_obj = session.query(Password).filter_by(website=website, user_username=session.query(User).first().username).first()
+        password_obj = session.query(Password).filter_by(website=website, user_id=current_user.username).first()
         if password_obj:
             new_password = input("Enter the new password: ")
             password_obj.password = new_password
@@ -211,37 +214,37 @@ if __name__ == '__cli__':
             print("Password updated successfully!")
             print("Press Enter to go back to the menu when you are done :D")
             input()
-            manage_Passwords()
+            manage_Passwords(current_user)
         else:
             print("Password not found. Please try again.")
-            edit_password()
+            edit_password(current_user)
 
-    def delete_password():
+    def delete_password(current_user):
         print("Delete Password Section!")
         website = input("Enter the website of the password you want to delete: ")
-        password_obj = session.query(Password).filter_by(website=website, user_username=session.query(User).first().username).first()
+        password_obj = session.query(Password).filter_by(website=website, user_id=current_user.username).first()
         if password_obj:
             session.delete(password_obj)
             session.commit()
             print("Password deleted successfully!")
             print("Press Enter to go back to the menu when you are done :D")
             input()
-            manage_Passwords()
+            manage_Passwords(current_user)
         else:
             print("Password not found. Please try again.")
-            delete_password()
+            delete_password(current_user)
 
-    def search_password():
+    def search_password(current_user):
         print("Search Password Section!")
         website = input("Enter the website of the password you want to search: ")
-        password_obj = session.query(Password).filter_by(website=website, user_username=session.query(User).first().username).first()
+        password_obj = session.query(Password).filter_by(website=website, user_id=current_user.username).first()
         if password_obj:
             print(f"Website: {password_obj.website}, Username: {password_obj.username}, Password: {password_obj.password}")
             print("Press Enter to go back to the menu when you are done :D")
             input()
-            manage_Passwords()
+            manage_Passwords(current_user)
         else:
             print("Password not found. Please try again.")
-            search_password()
+            search_password(current_user)
 
 start_screen()
