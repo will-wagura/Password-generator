@@ -9,10 +9,6 @@ from cryptography.fernet import Fernet
 
 Base = declarative_base()
 
-# Generate a key for encryption and decryption
-# You must store this key securely; losing it means losing access to your encrypted data
-# For demonstration purposes, we generate a key here.
-# In production, you should securely store and retrieve this key.
 key = Fernet.generate_key()
 cipher_suite = Fernet(key)
 
