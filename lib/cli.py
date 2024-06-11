@@ -1,29 +1,22 @@
 # lib/cli.py
 
-from helpers import (exit_program, helper_1, helper_2)
+from sqlalchemy import Column, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
 
-#Added some SQLAlchemy imports for the user model to create a template
-if __name__ == '__main__':
+class User(Base):
+    __tablename__ = 'users'
+    username = Column(String, primary_key=True)
+    password = Column(String)
+
+if __name__ == '__cli__':
     engine = create_engine('sqlite:///passwords.db')
     Base.metadata.create_all(engine)
     session = sessionmaker(bind=engine)
     session = Session()
-
-    def main():
-        while True:
-            menu()
-            choice = input("> ")
-            if choice == "0":
-                exit_program()
-            elif choice == "1":
-                helper_1()
-            elif choice == "2":
-                helper_2()
-            else:
-                print("Invalid choice")
-
 
     def start_screen():
         print('Welcome to Encrypto.')
@@ -45,10 +38,16 @@ if __name__ == '__main__':
         print('Please enter your desired password:')
         password = input("> ")
 
-        #Add logic for SQAlchemy to link signup with the database to store username and password data and create a user model.
-
-        print("Sign up successful! Please Login to continue.")
-        start_screen()
+        user = session.query(User).filter_by(username=username).first()
+        if user:
+            print('Username already exists. Please choose a different username.')
+            sign_Up()
+        else:
+            new_user = User(username=username, password=password)
+            session.add(new_user)
+            session.commit()
+            print('Account created successfully. Login to continue')
+            start_screen()
 
     def login():
         print('Please enter your username:')
@@ -56,8 +55,8 @@ if __name__ == '__main__':
         print('Please enter your password:') 
         password = input("> ")
 
-        #Use SQAlchemy to query user model and see if the user and password match for now I have hardcoded the username and password. 
-        if username == "Group 6" and password == "1234":
+        user = session.query(User).filter_by(username=username, password=password).first()
+        if user:
             print("Login successful!")
             menu()
         else:
@@ -67,9 +66,11 @@ if __name__ == '__main__':
     def menu():
         print("Welcome to Encrypto. What would you like to do?:")
         print("0. Help")
-        print("1. Create a new password")
+        print("1. Store a new password")
         print("2. Manage passwords")
-        print("3. Quit")
+        print("3. Sign Out")
+        print("4. Quit")
+        action = input("Please select an option: ")
 
 
 
