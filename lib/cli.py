@@ -4,13 +4,20 @@ from sqlalchemy import Column, String, Integer, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, relationship, Session
+import bcrypt
 
 Base = declarative_base()
 
 class User(Base):
     __tablename__ = 'users'
     username = Column(String, primary_key=True)
-    password = Column(String)
+    password_hash = Column(String)
+
+    def set_password(self, password):
+        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+    def check_password(self, password):
+        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
 
 class Password(Base):
     __tablename__ = 'passwords'
@@ -58,7 +65,8 @@ if __name__ == '__main__':
                 print('Username already exists. Please choose a different username.')
                 sign_Up()
             else:
-                new_user = User(username=username, password=password)
+                new_user = User(username=username)
+                new_user.set_password(password)
                 session.add(new_user)
                 session.commit()
                 print('Account created successfully. Login to continue')
@@ -71,7 +79,7 @@ if __name__ == '__main__':
         password = input("> ")
 
         user = session.query(User).filter_by(username=username, password=password).first()
-        if user:
+        if user and user.check_password(password):
             print("Login successful!")
             current_user = user
             menu(current_user)
