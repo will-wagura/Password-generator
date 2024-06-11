@@ -85,19 +85,23 @@ if __name__ == '__main__':
                 login()
 
     def reset_Password(username):
-        print("Reset password for", username)
-        new_password = input("Enter new password: ")
-        confirm_password = input("Confirm new password: ")
+        user = session.query(User).filter_by(username=username).first()
+        if user:
+            print("Reset password for", username)
+            new_password = input("Enter new password: ")
+            confirm_password = input("Confirm new password: ")
 
-        if new_password == confirm_password:
-            user = session.query(User).filter_by(username=username).first()
-            user.password = new_password
-            session.commit()
-            print("Password reset successfully. Please login again.")
-            login()
+            if new_password == confirm_password:
+                user.password = new_password
+                session.commit()
+                print("Password reset successfully. Please login again.")
+                login()
+            else:
+                print("Passwords do not match. Please try again.")
+                reset_Password(username)
         else:
-            print("Passwords do not match. Please try again.")
-            reset_Password(username)
+            print("User not found. Please try again.")
+            login()
 
     def menu(current_user):
         print("Welcome to Encrypto. What would you like to do?:")
