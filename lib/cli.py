@@ -193,7 +193,7 @@ if __name__ == '__cli__':
 
     def view_passwords():
         print("Here are your stored passwords:")
-        passwords = session.query(Password).filter_by(user_username=session.query(User).first().username).
+        passwords = session.query(Password).filter_by(user_username=session.query(User).first().username).all()
         for password in passwords:
             print(f"Website: {password.website}, Username: {password.username}, Password: {password.password}")
         print("Press Enter to go back to the menu when you are done :D")
@@ -243,5 +243,5 @@ if __name__ == '__cli__':
         else:
             print("Password not found. Please try again.")
             search_password()
-            
+
 start_screen()
