@@ -24,9 +24,16 @@ class Password(Base):
     id = Column(Integer, primary_key=True)
     website = Column(String)
     username = Column(String)
-    password = Column(String)
+    password_hash = Column(String)
     user_id = Column(String, ForeignKey('users.username'))
     user = relationship("User", backref="passwords")
+
+    def set_password(self, password):
+        salt = bcrypt.gensalt()
+        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), salt)
+
+    def check_password(self, password):
+        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
 
 def start_screen():
     print('Welcome to Encrypto.')
@@ -191,16 +198,15 @@ def help_section(current_user):
 
 def create_password(current_user):
     print("Welcome to the Create Password Section!")
-    print("Please enter the following details to create a new password:")
     website = input("Website/Application Name: ")
     username = input("Username: ")
     password = pwinput.pwinput("Password: ")
-
-    password_obj = Password(website=website, username=username, password=password, user_id=current_user.username)
+    password_obj = Password(website=website, username=username, user_id=current_user.username)
+    password_obj.set_password(password)
     session.add(password_obj)
     session.commit()
     print("Password stored successfully!")
-    print("Press Enter to go back to the menu when you are done :D")
+    print("Press Enter to go back to the menu when you are done.")
     input()
     menu(current_user)
 
@@ -230,12 +236,21 @@ def manage_passwords(current_user):
 
 def view_passwords(current_user):
     print("Here are your stored passwords:")
-    passwords = session.query(Password).filter_by(user_id=current_user.username).all()
-    for password in passwords:
-        print(f"Website: {password.website}, Username: {password.username}, Password: {password.password}")
-    print("Press Enter to go back to the menu when you are done :D")
+    passwords = session.query(Password).all()
+    if not passwords:
+        print("No passwords stored yet.")
+    else:
+        for password in passwords:
+            decrypted_password = decrypt_password(password.password_hash)
+            print(f"Website: {password.website}, Username: {password.username}, Password: {decrypted_password}")
+    print("Press Enter to go back to the menu when you are done.")
     input()
     manage_passwords(current_user)
+
+def decrypt_password(password_hash):
+    salt = bcrypt.gensalt()
+    decrypted_password = bcrypt.hashpw(password_hash, salt)
+    return decrypted_password.decode('utf-8')
 
 def edit_password(current_user):
     print("Edit Password Section!")
@@ -246,7 +261,7 @@ def edit_password(current_user):
         password_obj.password = new_password
         session.commit()
         print("Password updated successfully!")
-        print("Press Enter to go back to the menu when you are done :D")
+        print("Press Enter to go back to the menu when you are done.")
         input()
         manage_passwords(current_user)
     else:
@@ -261,7 +276,7 @@ def delete_password(current_user):
         session.delete(password_obj)
         session.commit()
         print("Password deleted successfully!")
-        print("Press Enter to go back to the menu when you are done :D")
+        print("Press Enter to go back to the menu when you are done.")
         input()
         manage_passwords(current_user)
     else:
@@ -274,7 +289,7 @@ def search_password(current_user):
     password_obj = session.query(Password).filter_by(website=website, user_id=current_user.username).first()
     if password_obj:
         print(f"Website: {password_obj.website}, Username: {password_obj.username}, Password: {password_obj.password}")
-        print("Press Enter to go back to the menu when you are done :D")
+        print("Press Enter to go back to the menu when you are done.")
         input()
         manage_passwords(current_user)
     else:
