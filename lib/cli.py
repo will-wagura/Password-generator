@@ -5,6 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, relationship, Session
 import bcrypt
+import re
 
 Base = declarative_base()
 
@@ -48,14 +49,37 @@ if __name__ == '__main__':
             print('Invalid option. Please select a valid option.')
             start_screen()
 
+    def validate_username(username):
+        if not isinstance(username, str):
+            return False
+        if len(username) <3 or len(username) >20:
+            return False
+        if not re.match(r'^[a-zA-Z0-9_]+$', username):
+            return False
+        return True
+    
+    def validate_password(password):
+        if not isinstance(password, str):
+            return False
+        if len(password) < 8:
+            return False
+        if not re.match(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$', password):
+            return False
+        return True
+
     def sign_Up():
         print('Please enter your desired username:')
         username = input("> ")
+        if not validate_username(username):
+            print('Invalid username. Please try again.')
+            sign_Up()
         print('Please enter your desired password:')
         password = input("> ")
+        if not validate_password(password):
+            print('Invalid password. Please try again.')
+            sign_Up()
         print('Confirm your password:')
         confirm_password = input("> ")
-
         if password != confirm_password:
             print("Passwords do not match!. Please try again.")
             sign_Up()
