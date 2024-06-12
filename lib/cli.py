@@ -150,8 +150,9 @@ def menu(current_user):
     print("0. Help.")
     print("1. Create a new password.")
     print("2. Manage passwords.")
-    print("3. Sign Out.")
-    print("4. Quit.")
+    print("3. Manage Account.")
+    print("4. Sign Out.")
+    print("5. Quit.")
     action = input("Please select an option: ")
 
     if action == "0":
@@ -161,8 +162,10 @@ def menu(current_user):
     elif action == "2":
         manage_passwords(current_user)
     elif action == "3":
-        start_screen()
+        manage_account(current_user)
     elif action == "4":
+        start_screen()
+    elif action == "5":
         quit()
     else:
         print("Invalid option. Please try again.")
@@ -296,6 +299,67 @@ def search_password(current_user):
     else:
         print("Password not found. Please try again.")
         search_password(current_user)
+
+def manage_account(current_user):
+    print("Manage Account Section!")
+    print("1. Edit Username")
+    print("2. Change Password")
+    print("3. Delete Account")
+    print("4. Back to menu")
+    action = input("Please select an option: ")
+    if action == "1":
+        edit_username(current_user)
+    elif action == "2":
+        change_password(current_user)
+    elif action == "3":
+        delete_account(current_user)
+    elif action == "4":
+        menu(current_user)
+    else:
+        print("Invalid option. Please try again.")
+
+def edit_username(current_user):
+    new_username = input("Enter your new username: ")
+    if validate_username(new_username):
+        current_user.username = new_username
+        session.commit()
+        print("Username updated successfully!")
+        print("Press Enter to go back when you are done.")
+        input()
+        manage_account(current_user)
+    else:
+        print("Invalid username. Please try again.")
+        edit_username(current_user)
+
+def change_password(current_user):
+    old_password = pwinput.pwinput("Enter your current password: ")
+    if current_user.check_password(old_password):
+        new_password = pwinput.pwinput("Enter your new password: ")
+        confirm_password = pwinput.pwinput("Confirm your new password: ")
+        if new_password == confirm_password:
+            current_user.set_password(new_password)
+            session.commit()
+            print("Password updated successfully!")
+            print("Press Enter to go back when you are done.")
+            input()
+            manage_account(current_user)
+        else:
+            print("Passwords do not match. Please try again.")
+            change_password(current_user)
+    else:
+        print("Invalid password. Please try again.")
+        change_password(current_user)
+
+def delete_account(current_user):
+    password = pwinput.pwinput("Enter your password to confirm: ")
+    if current_user.check_password(password):
+        session.delete(current_user)
+        session.commit()
+        print("Account deleted successfully!")
+        start_screen()
+    else:
+        print("Invalid password. Please try again.")
+        delete_account(current_user)
 
 if __name__ == '__main__':
     engine = create_engine('sqlite:///passwords.db')
