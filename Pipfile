@@ -12,6 +12,7 @@ cryptography = "*"
 pwinput = "*"
 alembic = "*"
 bcrypt = "*"
+texttable = "*"
 
 [dev-packages]
 
