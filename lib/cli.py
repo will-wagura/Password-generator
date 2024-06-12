@@ -5,8 +5,12 @@ from sqlalchemy.orm import sessionmaker, relationship, Session
 import bcrypt
 import re
 import pwinput
+from cryptography.fernet import Fernet
 
 Base = declarative_base()
+
+key = Fernet.generate_key()
+cipher_suite = Fernet(key)
 
 class User(Base):
     __tablename__ = 'users'
@@ -29,11 +33,12 @@ class Password(Base):
     user = relationship("User", backref="passwords")
 
     def set_password(self, password):
-        salt = bcrypt.gensalt()
-        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), salt)
+        encrypted_password = cipher_suite.encrypt(password.encode('utf-8'))
+        self.password_hash = encrypted_password.decode('utf-8')
 
-    def check_password(self, password):
-        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+    def get_decrypted_password(self):
+        decrypted_password = cipher_suite.decrypt(self.password_hash.encode('utf-8'))
+        return decrypted_password.decode('utf-8')
 
 def start_screen():
     print('Welcome to Encrypto.')
@@ -145,8 +150,9 @@ def menu(current_user):
     print("0. Help.")
     print("1. Create a new password.")
     print("2. Manage passwords.")
-    print("3. Sign Out.")
-    print("4. Quit.")
+    print("3. Manage Account.")
+    print("4. Sign Out.")
+    print("5. Quit.")
     action = input("Please select an option: ")
 
     if action == "0":
@@ -156,8 +162,10 @@ def menu(current_user):
     elif action == "2":
         manage_passwords(current_user)
     elif action == "3":
-        start_screen()
+        manage_account(current_user)
     elif action == "4":
+        start_screen()
+    elif action == "5":
         quit()
     else:
         print("Invalid option. Please try again.")
@@ -236,21 +244,16 @@ def manage_passwords(current_user):
 
 def view_passwords(current_user):
     print("Here are your stored passwords:")
-    passwords = session.query(Password).all()
+    passwords = session.query(Password).filter_by(user_id=current_user.username).all()
     if not passwords:
         print("No passwords stored yet.")
     else:
         for password in passwords:
-            decrypted_password = decrypt_password(password.password_hash)
+            decrypted_password = password.get_decrypted_password()
             print(f"Website: {password.website}, Username: {password.username}, Password: {decrypted_password}")
     print("Press Enter to go back to the menu when you are done.")
     input()
     manage_passwords(current_user)
-
-def decrypt_password(password_hash):
-    salt = bcrypt.gensalt()
-    decrypted_password = bcrypt.hashpw(password_hash, salt)
-    return decrypted_password.decode('utf-8')
 
 def edit_password(current_user):
     print("Edit Password Section!")
@@ -258,7 +261,7 @@ def edit_password(current_user):
     password_obj = session.query(Password).filter_by(website=website, user_id=current_user.username).first()
     if password_obj:
         new_password = pwinput.pwinput("Enter the new password: ")
-        password_obj.password = new_password
+        password_obj.set_password(new_password)
         session.commit()
         print("Password updated successfully!")
         print("Press Enter to go back to the menu when you are done.")
@@ -288,13 +291,75 @@ def search_password(current_user):
     website = input("Enter the website of the password you want to search: ")
     password_obj = session.query(Password).filter_by(website=website, user_id=current_user.username).first()
     if password_obj:
-        print(f"Website: {password_obj.website}, Username: {password_obj.username}, Password: {password_obj.password}")
+        decrypted_password = password_obj.get_decrypted_password()
+        print(f"Website: {password_obj.website}, Username: {password_obj.username}, Password: {decrypted_password}")
         print("Press Enter to go back to the menu when you are done.")
         input()
         manage_passwords(current_user)
     else:
         print("Password not found. Please try again.")
         search_password(current_user)
+
+def manage_account(current_user):
+    print("Manage Account Section!")
+    print("1. Edit Username")
+    print("2. Change Password")
+    print("3. Delete Account")
+    print("4. Back to menu")
+    action = input("Please select an option: ")
+    if action == "1":
+        edit_username(current_user)
+    elif action == "2":
+        change_password(current_user)
+    elif action == "3":
+        delete_account(current_user)
+    elif action == "4":
+        menu(current_user)
+    else:
+        print("Invalid option. Please try again.")
+
+def edit_username(current_user):
+    new_username = input("Enter your new username: ")
+    if validate_username(new_username):
+        current_user.username = new_username
+        session.commit()
+        print("Username updated successfully!")
+        print("Press Enter to go back when you are done.")
+        input()
+        manage_account(current_user)
+    else:
+        print("Invalid username. Please try again.")
+        edit_username(current_user)
+
+def change_password(current_user):
+    old_password = pwinput.pwinput("Enter your current password: ")
+    if current_user.check_password(old_password):
+        new_password = pwinput.pwinput("Enter your new password: ")
+        confirm_password = pwinput.pwinput("Confirm your new password: ")
+        if new_password == confirm_password:
+            current_user.set_password(new_password)
+            session.commit()
+            print("Password updated successfully!")
+            print("Press Enter to go back when you are done.")
+            input()
+            manage_account(current_user)
+        else:
+            print("Passwords do not match. Please try again.")
+            change_password(current_user)
+    else:
+        print("Invalid password. Please try again.")
+        change_password(current_user)
+
+def delete_account(current_user):
+    password = pwinput.pwinput("Enter your password to confirm: ")
+    if current_user.check_password(password):
+        session.delete(current_user)
+        session.commit()
+        print("Account deleted successfully!")
+        start_screen()
+    else:
+        print("Invalid password. Please try again.")
+        delete_account(current_user)
 
 if __name__ == '__main__':
     engine = create_engine('sqlite:///passwords.db')
