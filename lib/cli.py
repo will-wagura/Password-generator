@@ -99,7 +99,7 @@ def sign_up():
         confirm_password = pwinput.pwinput("> ")
         if confirm_password.lower() == 'cancel':
             start_screen()
-        elif password != confirm_password:
+        elif password == confirm_password:
             break
         print("Passwords do not match! Please try again.")
 
