@@ -16,14 +16,14 @@ session = Session()
 
 # Define sample data
 sample_users = [
-    {"username": "stephy_maina", "password": "Abcd12345"},
+    {"username": "stephy_kamau", "password": "Abcd12345"},
     {"username": "joseph_wanini", "password": "Abcd12345"},
     {"username": "abdulbarik_mohamed", "password": "Abcd12345"},
     {"username": "victor_gachure", "password": "Abcd12345"}
 ]
 
 sample_passwords = [
-    {"website": "example.com", "username": "user2@example.com", "password": "examplePass1", "user_id": "stephy_maina"},
+    {"website": "example.com", "username": "user2@example.com", "password": "examplePass1", "user_id": "stephy_kamau"},
     {"website": "test.com", "username": "user3@test.com", "password": "testPass2", "user_id": "joseph_wanini"},
     {"website": "demo.com", "username": "user4@demo.com", "password": "demoPass3", "user_id": "abdulbarik_mohamed"},
     {"website": "facebook.com", "username": "user5@facebook.com", "password": "fbUser1Pass", "user_id": "victor_gachure"},
