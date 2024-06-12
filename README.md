@@ -25,11 +25,6 @@ Modify line 63 in `alembic.ini` to point to the database you intend to create
 ```py
 sqlalchemy.url = sqlite:///..
 ```
-Replace line 21 in `migrations/env.py` with the following:
-```py
-from models import Base
-target_metadata = Base.metadata
-```
 Regularly run 
 ```bash
 alembic revision --autogenerate -m'<descriptive message>'
