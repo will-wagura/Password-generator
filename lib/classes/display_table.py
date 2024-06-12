@@ -24,3 +24,8 @@ if __name__ == '__main__':
     Session = sessionmaker(bind=engine)
     session = Session()
     data = session.query(DisplayTable).all()
+    textTable = Texttable()
+    textTable.header(['Username', 'Password'])
+    for datum in data:
+        textTable.add_row([datum.username, datum.password])
+        print(textTable.draw())
