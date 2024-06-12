@@ -289,10 +289,10 @@ def delete_password(current_user):
 def search_password(current_user):
     print("Search Password Section!")
     website = input("Enter the website of the password you want to search: ")
-    website_lower = website.lower()  # Convert search query to lowercase
+    website_lower = website.lower() 
     password_obj = session.query(Password).filter_by(user_id=current_user.username).all()
     for password in password_obj:
-        if website_lower in password.website.lower():  # Compare lowercase search query with lowercase password website
+        if website_lower in password.website.lower(): 
             decrypted_password = password.get_decrypted_password()
             print(f"Website: {password.website}, Username: {password.username}, Password: {decrypted_password}")
     print("Press Enter to go back to the menu when you are done.")
@@ -318,17 +318,22 @@ def manage_account(current_user):
         print("Invalid option. Please try again.")
 
 def edit_username(current_user):
+    print("Edit Username Section!")
+    old_username = current_user.username  # Store the old username
     new_username = input("Enter your new username: ")
-    if validate_username(new_username):
-        current_user.username = new_username
-        session.commit()
-        print("Username updated successfully!")
-        print("Press Enter to go back when you are done.")
-        input()
-        manage_account(current_user)
-    else:
-        print("Invalid username. Please try again.")
-        edit_username(current_user)
+    current_user.username = new_username
+    session.commit()  # Update the username in the users table
+
+    # Update the user_id in the passwords table
+    password_obj = session.query(Password).filter_by(user_id=old_username).all()
+    for password in password_obj:
+        password.user_id = new_username
+    session.commit() 
+
+    print("Username updated successfully!")
+    print("Press Enter to go back to the menu when you are done.")
+    input()
+    manage_account(current_user)
 
 def change_password(current_user):
     old_password = pwinput.pwinput("Enter your current password: ")
