@@ -44,12 +44,15 @@ def start_screen():
     print('Welcome to Encrypto.')
     print('1. Sign Up')
     print('2. Login')
+    print('3. Quit')
     action = input("Please select an option: ")
 
     if action == '1':
         sign_up()
     elif action == '2':
         login()
+    elif action == '3':
+        quit()
     else:
         print('Invalid option. Please select a valid option.')
         start_screen()
@@ -74,35 +77,43 @@ def validate_password(password):
 
 def sign_up():
     while True:
-        print('Please enter your desired username:')
+        print('Please enter your desired username (or "cancel" to go back):')
         username = input("> ")
-        if validate_username(username):
+        if username.lower() == 'cancel':
+            start_screen()
+        elif validate_username(username):
             break
         print('Invalid username. Please try again.')
 
     while True:
-        print('Please enter your desired password:')
+        print('Please enter your desired password (or "cancel" to go back):')
         password = pwinput.pwinput("> ")
-        if validate_password(password):
+        if password.lower() == 'cancel':
+            start_screen()
+        elif validate_password(password):
             break
         print('Invalid password. Please try again.')
 
-    confirm_password = pwinput.pwinput("Confirm your password: ")
-    if password != confirm_password:
+    while True:
+        print('Confirm your password (or "cancel" to go back):')
+        confirm_password = pwinput.pwinput("> ")
+        if confirm_password.lower() == 'cancel':
+            start_screen()
+        elif password != confirm_password:
+            break
         print("Passwords do not match! Please try again.")
+
+    user = session.query(User).filter_by(username=username).first()
+    if user:
+        print('Username already exists. Please choose a different username.')
         sign_up()
     else:
-        user = session.query(User).filter_by(username=username).first()
-        if user:
-            print('Username already exists. Please choose a different username.')
-            sign_up()
-        else:
-            new_user = User(username=username)
-            new_user.set_password(password)
-            session.add(new_user)
-            session.commit()
-            print('Account created successfully. Login to continue')
-            start_screen()
+        new_user = User(username=username)
+        new_user.set_password(password)
+        session.add(new_user)
+        session.commit()
+        print('Account created successfully.')
+        start_screen()
 
 def login():
     while True:
