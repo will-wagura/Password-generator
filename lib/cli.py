@@ -289,16 +289,15 @@ def delete_password(current_user):
 def search_password(current_user):
     print("Search Password Section!")
     website = input("Enter the website of the password you want to search: ")
-    password_obj = session.query(Password).filter_by(website=website, user_id=current_user.username).first()
-    if password_obj:
-        decrypted_password = password_obj.get_decrypted_password()
-        print(f"Website: {password_obj.website}, Username: {password_obj.username}, Password: {decrypted_password}")
-        print("Press Enter to go back to the menu when you are done.")
-        input()
-        manage_passwords(current_user)
-    else:
-        print("Password not found. Please try again.")
-        search_password(current_user)
+    website_lower = website.lower()  # Convert search query to lowercase
+    password_obj = session.query(Password).filter_by(user_id=current_user.username).all()
+    for password in password_obj:
+        if website_lower in password.website.lower():  # Compare lowercase search query with lowercase password website
+            decrypted_password = password.get_decrypted_password()
+            print(f"Website: {password.website}, Username: {password.username}, Password: {decrypted_password}")
+    print("Press Enter to go back to the menu when you are done.")
+    input()
+    manage_passwords(current_user)
 
 def manage_account(current_user):
     print("Manage Account Section!")

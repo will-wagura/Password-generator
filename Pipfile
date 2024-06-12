@@ -11,6 +11,7 @@ sqlalchemy = "*"
 cryptography = "*"
 pwinput = "*"
 alembic = "*"
+bcrypt = "*"
 
 [dev-packages]
 
