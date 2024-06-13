@@ -51,6 +51,9 @@ jspm_packages
 .pytest_cache
 __pycache__
 
+# Ignore the key.key file
+key.key
+
 
 *.db
 */*.db
