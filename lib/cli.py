@@ -6,10 +6,21 @@ import bcrypt
 import re
 import pwinput
 from cryptography.fernet import Fernet
+from texttable import Texttable
+import string
+import secrets
 
 Base = declarative_base()
 
-key = Fernet.generate_key()
+# Generate the key only once and store it in a file
+try:
+    with open('key.key', 'rb') as key_file:
+        key = key_file.read()
+except FileNotFoundError:
+    key = Fernet.generate_key()
+    with open('key.key', 'wb') as key_file:
+        key_file.write(key)
+
 cipher_suite = Fernet(key)
 
 class User(Base):
@@ -126,9 +137,11 @@ def login():
         break
 
     while True:
-        print('Please enter your password:')
+        print('Please enter your password (or "reset" to reset your password):')
         password = pwinput.pwinput("> ")
-        if not user.check_password(password):
+        if password.lower() == 'reset':
+            reset_password(username)
+        elif not user.check_password(password):
             print("Invalid password. Please try again.")
             continue
         break
@@ -219,7 +232,20 @@ def create_password(current_user):
     print("Welcome to the Create Password Section!")
     website = input("Website/Application Name: ")
     username = input("Username: ")
-    password = pwinput.pwinput("Password: ")
+    
+    print("Do you want to:")
+    print("1. Generate a random password")
+    print("2. Input your own password")
+    action = input("Please select an option: ")
+    
+    if action == "1":
+        password = generate_random_password()
+    elif action == "2":
+        password = pwinput.pwinput("Password: ")
+    else:
+        print("Invalid option. Please try again.")
+        create_password(current_user)
+    
     password_obj = Password(website=website, username=username, user_id=current_user.username)
     password_obj.set_password(password)
     session.add(password_obj)
@@ -228,6 +254,16 @@ def create_password(current_user):
     print("Press Enter to go back to the menu when you are done.")
     input()
     menu(current_user)
+
+def generate_random_password(length=12):
+    alphabet = string.ascii_letters + string.digits + string.punctuation
+    while True:
+        password = ''.join(secrets.choice(alphabet) for _ in range(length))
+        if (any(c.islower() for c in password) 
+                and any(c.isupper() for c in password) 
+                and any(c.isdigit() for c in password) 
+                and any(c in string.punctuation for c in password)):
+            return password
 
 def manage_passwords(current_user):
     print("Welcome to the Manage Passwords Section!")
@@ -259,9 +295,12 @@ def view_passwords(current_user):
     if not passwords:
         print("No passwords stored yet.")
     else:
+        table = Texttable()
+        table.header(["Website", "Username", "Password"])
         for password in passwords:
             decrypted_password = password.get_decrypted_password()
-            print(f"Website: {password.website}, Username: {password.username}, Password: {decrypted_password}")
+            table.add_row([password.website, password.username, decrypted_password])
+        print(table.draw())
     print("Press Enter to go back to the menu when you are done.")
     input()
     manage_passwords(current_user)
